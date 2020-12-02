@@ -56,14 +56,12 @@ class Close(object):
 
     def __init__(self, func):
         self.func = func
-        self.disable = False
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        if not self.disable:
-            self.func()
+        self.func()
 
 
 class RewindDidNotStop(Exception):
@@ -72,6 +70,7 @@ class RewindDidNotStop(Exception):
         super(RewindDidNotStop, self).__init__(
             'Did not reach unwind stop condition'
         )
+
 
 
 class Context(threading.local):
@@ -96,7 +95,7 @@ class Context(threading.local):
                 src=None,
                 src_path=None,
                 ignore_default=False,
-                ignore_missing=False,
+                ignore_missing=False
             ),
         ]
 

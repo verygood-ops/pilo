@@ -80,7 +80,7 @@ class Path(collections.MutableSequence):
         if self:
             parts = ['{0}'.format(self[0])]
             for part in self[1:]:
-                if isinstance(part.key, (int, long)):
+                if isinstance(part.key, int):
                     part = '[{0}]'.format(part.key)
                 else:
                     part = '.' + part.key
@@ -148,7 +148,7 @@ class Path(collections.MutableSequence):
     # collections.MutableSequence
 
     def __setitem__(self, index, value):
-        if isinstance(value, (long, int, basestring)):
+        if isinstance(value, (int, str)):
             value = PathPart(key=value)
         self.parts[index] = value
 
@@ -156,7 +156,7 @@ class Path(collections.MutableSequence):
         del self.parts[index]
 
     def insert(self, index, value):
-        if isinstance(value, (long, int, basestring)):
+        if isinstance(value, (int, str)):
             value = PathPart(key=value)
         self.parts.insert(index, value)
 
@@ -203,7 +203,7 @@ class Source(object):
         Resolves a path to a primitive within this source. If no type is given
         then it'll be inferred if possible.
         """
-        raise NotImplementedError('{0} does not support primitives!'.format(type(self)))
+        raise NotImplementedError('{0} does not support primitves!'.format(type(self)))
 
 
 class ParserMixin(object):
@@ -212,19 +212,19 @@ class ParserMixin(object):
     """
 
     def as_string(self, path, value):
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return value
         raise self.error(path, '"{0}" is not a string'.format(value))
 
     def as_int(self, path, value):
-        if isinstance(value, (int, long)) and not isinstance(value, bool):
+        if isinstance(value, int) and not isinstance(value, bool):
             pass
         elif isinstance(value, float):
             if not value.is_integer():
                 raise self.error(path, '"{0}" is not an integer'.format(value))
             else:
                 value = int(value)
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             try:
                 value = int(value)
             except (ValueError, TypeError):
@@ -236,9 +236,9 @@ class ParserMixin(object):
     def as_float(self, path, value):
         if isinstance(value, (float)):
             pass
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, int):
             value = float(value)
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             try:
                 value = float(value)
             except (ValueError, TypeError):
@@ -252,7 +252,7 @@ class ParserMixin(object):
             return value
         if isinstance(value, int):
             return value != 0
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             if value.lower() in ('0', 'f', 'false'):
                 return False
             elif value.lower() in ('1', 't', 'true'):
@@ -263,7 +263,7 @@ class ParserMixin(object):
         return value
 
     parsers = {
-        basestring: as_string,
+        str: as_string,
         int: as_int,
         float: as_float,
         bool: as_bool,
@@ -290,5 +290,7 @@ class ParserMixin(object):
 from .default import DefaultSource, DefaultPath
 from .configparser import ConfigSource, ConfigPath
 from .json import JsonSource, JsonPath
-from .union import UnionSource, UnionSource as union, UnionPath
-from .mount import MountSource, MountSource as mount, MountPath
+from .union import UnionSource, UnionPath
+
+
+union = UnionSource
