@@ -27,7 +27,7 @@ extras_require = {
 packages = setuptools.find_packages('.', exclude=('tests', 'tests.*'))
 
 setuptools.setup(
-    name='pilo',
+    name='py3-pilo',
     version=(
         re
         .compile(r".*__version__ = '(.*?)'", re.S)
