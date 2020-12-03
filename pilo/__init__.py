@@ -1,6 +1,6 @@
 """
 """
-__version__ = '0.6.1'
+__version__ = '0.4.0'
 
 __all__ = [
     'NOT_SET',
@@ -75,7 +75,7 @@ class Types(dict):
     def for_field(cls, type_field):
         fields = {}
         for field in type_field.parent.fields:
-            fields[field.name] = field.clone()
+            fields[field.name] = type(field)(field.src, default=None)
             if field is type_field:
                 break
         else:
@@ -96,7 +96,7 @@ class Types(dict):
         probe = self.type_form()
         errors = probe.map(src)
         if not errors:
-            return self.type_field.__get__(probe)
+            return getattr(probe, self.type_field.name)
         if default in IGNORE:
             raise errors[0]
         return default

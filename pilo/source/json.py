@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import inspect
 import json
@@ -22,7 +22,7 @@ class JsonPath(Path):
 
     def resolve(self, container, part):
         try:
-            if not isinstance(part.key, basestring) or '.' not in part.key:
+            if not isinstance(part.key, str) or '.' not in part.key:
                 return container[part.key]
             value = container
             for atom in part.key.split('.'):
@@ -42,20 +42,20 @@ class JsonSource(Source):
         self.data = json.loads(text, encoding=encoding)
 
     def as_string(self, field, value):
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return value
         if not self.strict:
             return str(value)
         raise self.error(field, '{0} is not a string'.format(value))
 
     def as_int(self, field, value):
-        if isinstance(value, (int, long)) and not isinstance(value, bool):
+        if isinstance(value, int) and not isinstance(value, bool):
             return value
         if not self.strict:
             if isinstance(value, float):
                 if value.is_integer():
                     return int(value)
-            elif isinstance(value, basestring):
+            elif isinstance(value, str):
                 try:
                     return int(value)
                 except ValueError:
@@ -65,10 +65,10 @@ class JsonSource(Source):
     def as_float(self, field, value):
         if isinstance(value, (float)):
             return value
-        if isinstance(value, (int, long)):
+        if isinstance(value, int):
             return float(value)
         if not self.strict:
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 try:
                     return float(value)
                 except ValueError:
@@ -87,7 +87,7 @@ class JsonSource(Source):
         return value
 
     parsers = {
-        basestring: as_string,
+        str: as_string,
         int: as_int,
         float: as_float,
         bool: as_bool,
@@ -121,9 +121,9 @@ class JsonSource(Source):
         return len(path.value)
 
     def mapping(self, path):
-        if not isinstance(path.value, (dict,)):
+        if not isinstance(path.value, dict):
             raise self.error(path, 'not a mapping')
-        return path.value.keys()
+        return list(path.value.keys())
 
     def primitive(self, path, *types):
         return self.parser(types)(self, path, path.value)

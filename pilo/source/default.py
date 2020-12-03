@@ -32,7 +32,7 @@ class DefaultPath(Path):
         return NONE
 
     def _as_attr(self, container, atom):
-        if isinstance(atom, basestring):
+        if isinstance(atom, str):
             try:
                 return getattr(container, atom)
             except (AttributeError, TypeError):
@@ -52,7 +52,7 @@ class DefaultPath(Path):
         return ':'.join(parts)
 
     def resolve(self, container, part):
-        if isinstance(part.key, basestring) and part.key.endswith('()'):
+        if isinstance(part.key, str) and part.key.endswith('()'):
             part = copy.copy(part)
             part.key = part.key[:-2]
             value = self.resolve(container, part)
@@ -60,7 +60,7 @@ class DefaultPath(Path):
                 return NONE
             return value()
 
-        if isinstance(part.key, basestring):
+        if isinstance(part.key, str):
             value = self._resolve(container, part.key)
             if value is NONE:
                 value = container
@@ -94,20 +94,14 @@ class DefaultSource(Source, ParserMixin):
         return DefaultPath(self, self.location)
 
     def sequence(self, path):
-        if isinstance(path.value, (collections.Sequence, list, tuple)):
-            return len(path.value)
-        raise self.error(path, 'is not a sequence')
+        if not isinstance(path.value, (collections.Sequence, list, tuple)):
+            raise self.error(path, 'is not a sequence')
+        return len(path.value)
 
     def mapping(self, path):
-        if isinstance(path.value, (collections.Mapping, dict)):
-            if self.aliases and len(path) == 0:
-                return self.aliases.keys()
-            return path.value.keys()
-        if (isinstance(path.value, (collections.Sequence, list, tuple)) and
-            self.aliases and
-            len(path) == 0):
-            return self.aliases.keys()
-        raise self.error(path, 'is not a mapping')
+        if not isinstance(path.value, (collections.Mapping, dict)):
+            raise self.error(path, 'is not a mapping')
+        return list(path.value.keys())
 
     def primitive(self, path, *types):
         return self.parser(types)(self, path, path.value)

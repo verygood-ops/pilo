@@ -1,8 +1,6 @@
 import collections
-import ConfigParser
 import re
 import shlex
-import StringIO
 import textwrap
 
 from . import Source, Path, ParserMixin, NONE
@@ -31,7 +29,7 @@ class ConfigPath(Path):
 
     def resolve(self, container, part):
         try:
-            if isinstance(container, basestring):
+            if isinstance(container, str):
                 container = Sequence(container)
             return container[part.key]
         except (KeyError, IndexError, TypeError):
@@ -41,12 +39,7 @@ class ConfigPath(Path):
 class Sequence(collections.Sequence):
 
     def __init__(self, value):
-        if '\n' in value:
-            self.values = [
-                line.strip() for line in value.splitlines() if line.strip()
-            ]
-        else:
-            self.values = shlex.split(value)
+        self.values = shlex.split(value)
 
     def __getitem__(self, i):
         return self.values[i]
@@ -79,7 +72,7 @@ class SectionMapping(collections.Mapping):
         raise KeyError(key)
 
     def __iter__(self):
-        for k, v in self.sub_mappings.iteritems():
+        for k, v in self.sub_mappings.items():
             yield k
         for k, v in self.config.items(self.section):
             yield k
@@ -109,31 +102,16 @@ class Mapping(collections.Mapping):
 
 class ConfigSource(Source, ParserMixin):
 
-    @classmethod
-    def from_file(cls, path, *args, **kwargs):
-        kwargs['location'] = path
-        with open(path, 'r') as fo:
-            return cls(fo.read(), *args, **kwargs)
-
     def __init__(self,
                  config,
                  section=None,
                  location=None,
                  defaults=None,
-                 preserve_whitespace=False,
-                 preserve_case=False,
+                 preserve_whitespace=False
         ):
         super(ConfigSource, self).__init__()
         if preserve_whitespace and location is None:
-            raise ValueError('preserve_white_space=True without location')
-        if preserve_case and not isinstance(config, basestring):
-            raise ValueError('preserve_case=True but config is not string')
-        if isinstance(config, basestring):
-            parser = ConfigParser.ConfigParser()
-            if preserve_case:
-                config.optionxform = lambda x: x
-            parser.readfp(StringIO.StringIO(config))
-            config = parser
+            raise ValueError('preserve white-space=True without location')
         self.config = config
         self.section = section
         self.location = location
@@ -141,7 +119,7 @@ class ConfigSource(Source, ParserMixin):
         self.preserve_whitespace = preserve_whitespace
 
     def as_raw(self, path):
-        option = str(path[-1])
+        option = path[-1]
         lines = []
         with open(self.location, 'r') as fo:
             section_header = '[{0}]'.format(self.section)
@@ -164,15 +142,13 @@ class ConfigSource(Source, ParserMixin):
 
     def sequence(self, path):
         value = path.value
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return len(Sequence(value))
-        if isinstance(value, collections.Sequence):
-            return len(value)
         raise self.error(path, 'not a sequence')
 
     def mapping(self, path):
-        if isinstance(path.value, collections.Mapping):
-            return path.value.keys()
+        if isinstance(path.value, (collections.Mapping, dict)):
+            return list(path.value.keys())
         raise self.error(path, 'not a mapping')
 
     def primitive(self, path, *types):
@@ -180,7 +156,7 @@ class ConfigSource(Source, ParserMixin):
 
         # preserve white-space for mulit-line strings
         if (self.preserve_whitespace and
-            isinstance(value, basestring) and
+            isinstance(value, str) and
             value.count('\n') > 0):
             value = self.as_raw(path)
 
